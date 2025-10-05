@@ -3,41 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>製程大挑戰（修正版）</title>
-  <link rel="stylesheet" href="flow.css" />
+  <title>製程大挑戰 Plus</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>🔧 製程大挑戰（修正版）</h1>
-    <p>拖曳卡片到右側「排列區」，完成後按「提交」檢查結果。</p>
+  <header class="topbar">
+    <h1>🔧 製程大挑戰 Plus</h1>
+    <div class="meta">
+      <div>⏱ 時間：<span id="timer">00:00</span></div>
+      <div>🔁 操作次數：<span id="moves">0</span></div>
+      <div>⭐ 分數：<span id="score">0</span></div>
+    </div>
   </header>
 
   <main class="container">
-    <section class="pool">
+    <aside class="panel">
       <h2>步驟池</h2>
       <div id="step-pool" class="card-list"></div>
-    </section>
+      <div class="row">
+        <button id="shuffleBtn">重新洗牌</button>
+        <button id="hintBtn" class="secondary">提示</button>
+      </div>
+      <div class="row">
+        <button id="saveBtn" class="secondary">儲存進度</button>
+        <button id="loadBtn" class="secondary">載入進度</button>
+      </div>
+      <details class="mt8">
+        <summary>說明與目標</summary>
+        <div id="objective" class="small"></div>
+      </details>
+    </aside>
 
-    <section class="flow">
+    <section class="panel">
       <h2>排列區</h2>
       <div id="flow-area" class="card-list droppable"
            ondragover="event.preventDefault()"
            ondrop="dropToFlow(event)">
-        <div class="placeholder">把步驟卡片拖曳到這裡 →</div>
+        <div class="placeholder">把步驟卡片拖曳到這裡（或點擊步驟池卡片加入） →</div>
       </div>
-
-      <div class="actions">
-        <button onclick="submitFlow()">提交</button>
-        <button class="secondary" onclick="resetFlow()">重置</button>
+      <div class="row mt8">
+        <button id="submitBtn" class="primary">提交</button>
+        <button id="resetBtn" class="secondary">重置</button>
+        <button id="clearBtn" class="secondary">清除排列區</button>
       </div>
       <div id="result" class="result"></div>
+      <div id="diff" class="diff"></div>
     </section>
+
+    <aside class="panel slim">
+      <h2>工具</h2>
+      <div class="trash" id="trash" ondragover="event.preventDefault()" ondrop="dropToTrash(event)">🗑 拖曳至此可移除</div>
+      <div class="kbd small">小撇步：選取排列區的卡片後可用鍵盤 ← → 移動；Delete 移除。</div>
+    </aside>
   </main>
 
-  <footer>
-    <small>本版本已修正：拖曳目標、重複檢查、提交列印順序。</small>
+  <footer class="footer">
+    <small>本版本新增：重排、提示、避免重複、儲存/載入、計時與分數、鍵盤操作、行動裝置點擊加入。</small>
   </footer>
 
-  <script src="flow.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
