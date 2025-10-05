@@ -1,0 +1,25 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; background: #f6f8fb; color: #1f2937; }
+header { padding: 16px 20px; background: #111827; color: #fff; }
+h1 { margin: 0; font-size: 20px; }
+.container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; padding: 16px; }
+section { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+h2 { margin-top: 0; font-size: 16px; }
+
+.card-list { min-height: 260px; border: 2px dashed #d1d5db; border-radius: 12px; padding: 12px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+.placeholder { color: #9ca3af; font-size: 14px; }
+
+.step-card { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 10px; padding: 10px 12px; cursor: grab; user-select: none; }
+.step-card:active { cursor: grabbing; }
+.step-card.badge { background: #e0f2fe; border-color: #7dd3fc; }
+
+.droppable { background: #fafafa; }
+.actions { margin-top: 12px; display: flex; gap: 10px; }
+button { padding: 10px 14px; border-radius: 10px; border: 1px solid #d1d5db; background: #2563eb; color: #fff; cursor: pointer; }
+button.secondary { background: #fff; color: #111827; }
+.result { margin-top: 12px; font-weight: bold; }
+
+footer { text-align: center; padding: 8px 0 16px; color: #6b7280; font-size: 12px; }
+@media (max-width: 880px) {
+  .container { grid-template-columns: 1fr; }
+}
