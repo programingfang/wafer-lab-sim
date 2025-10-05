@@ -1,1 +1,186 @@
-<!-- wafer-lab project placeholder -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wafer Lab 模擬製程工坊（厚度版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; background:#f7f9fc; margin:0; }
+    header { padding:16px 20px; background:#1f2937; color:#fff; }
+    h1 { margin:0; font-size:20px; }
+    .container { display:flex; gap:16px; padding:16px; flex-wrap:wrap; }
+    .panel { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; flex:1; min-width:320px; }
+    .tools { max-width:420px; }
+    .tool-btn { display:block; width:100%; text-align:left; padding:10px 12px; margin:6px 0;
+                border:1px solid #d1d5db; border-radius:10px; background:#f3f4f6; cursor:pointer; }
+    .tool-btn:hover { background:#e5e7eb; }
+    .row { display:flex; gap:8px; align-items:center; margin:10px 0; }
+    label { font-size:14px; }
+    select, button { padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; background:#fff; }
+    button.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+    canvas { width:100%; max-width:520px; height:360px; border:1px solid #d1d5db; border-radius:12px; background:#ffffff; }
+    ul#historyLog { margin:8px 0 0 20px; padding:0; }
+    ul#historyLog li { margin:4px 0; }
+    .hint { font-size:12px; color:#6b7280; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧪 Wafer Lab 模擬製程工坊（厚度版 / PR 轉印與部分蝕刻）</h1>
+  </header>
+
+  <div class="container">
+    <div class="panel tools">
+      <h3>🔧 製程工具</h3>
+      <button class="tool-btn" onclick="applyLayer('Si',   '#9ca3af', 100)">矽晶圓（Si, 100 nm）</button>
+      <button class="tool-btn" onclick="applyLayer('SiO2', '#fbbf24', 30)">熱氧化（SiO₂, 30 nm）</button>
+      <button class="tool-btn" onclick="applyLayer('PR',   '#8b5cf6', 100)">光阻塗佈（PR, 100 nm）</button>
+      <button class="tool-btn" onclick="applyLayer('Al',   '#d1d5db', 100)">金屬化（Al PVD, 100 nm）</button>
+
+      <div class="row">
+        <label for="maskSelect">光罩圖形：</label>
+        <select id="maskSelect">
+          <option value="none">無</option>
+          <option value="stripe">條紋</option>
+          <option value="circle">圓形</option>
+        </select>
+        <button onclick="exposeAndDevelop()" class="primary">曝光與顯影</button>
+      </div>
+
+      <div class="row">
+        <button onclick="etch()" class="tool-btn">蝕刻（依 PR 圖形轉印，深度=PR厚度；無PR則移除最上層）</button>
+      </div>
+
+      <div class="row">
+        <button onclick="stripPR()" class="tool-btn">去光阻（移除最上層 PR）</button>
+        <button onclick="resetAll()" class="tool-btn">重置</button>
+      </div>
+
+      <div class="hint">提示：請先放上「矽晶圓」，再進行氧化 / PR / 曝光 / 蝕刻…</div>
+
+      <h3>📝 製程歷史</h3>
+      <ul id="historyLog"></ul>
+    </div>
+
+    <div class="panel">
+      <h3>🧫 剖面圖（厚度等比例，1 nm = 0.5 px）</h3>
+      <canvas id="waferCanvas" width="520" height="360"></canvas>
+      <div class="hint">每一層會標示材料名稱與厚度；有圖形時，條紋/圓形區域代表已開口。</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('waferCanvas');
+    const ctx = canvas.getContext('2d');
+    const nmToPx = 0.5; // 厚度縮放比例：1 nm = 0.5 px
+
+    // layer: { name, color, thickness (nm), pattern: 'none'|'stripe'|'circle' }
+    const stack = [];
+    const historyEl = document.getElementById('historyLog');
+
+    function log(msg) {
+      const li = document.createElement('li');
+      li.textContent = msg;
+      historyEl.appendChild(li);
+    }
+
+    function applyLayer(name, color, thicknessNm) {
+      stack.push({ name, color, thickness: thicknessNm, pattern: 'none' });
+      log(`加入薄膜：${name}（${thicknessNm} nm）`);
+      draw();
+    }
+
+    function exposeAndDevelop() {
+      if (stack.length === 0) { log('⚠️ 無薄膜可曝光'); return; }
+      const top = stack[stack.length - 1];
+      const mask = document.getElementById('maskSelect').value;
+      top.pattern = mask;
+      log(`曝光與顯影：套用光罩圖形「${mask}」於 ${top.name}`);
+      draw();
+    }
+
+    function stripPR() {
+      if (stack.length === 0) return;
+      const top = stack[stack.length - 1];
+      if (top.name !== 'PR') { log('⚠️ 最上層不是 PR，略過'); return; }
+      stack.pop();
+      log('去光阻：移除最上層 PR');
+      draw();
+    }
+
+    // 蝕刻邏輯：
+    // 1) 若頂層有 PR 且帶 pattern，將該 pattern 轉印到「下一層」並
+    //    依 PR 厚度減少下一層厚度（部分蝕刻，最少減為 0，不會整層刪除）。
+    // 2) 若頂層不是 PR 或沒有 pattern，則移除最上層薄膜（整層去除）。
+    function etch() {
+      if (stack.length === 0) return;
+
+      const top = stack[stack.length - 1];
+      const underIdx = stack.length - 2;
+      if (top.name === 'PR' && top.pattern && top.pattern !== 'none' && underIdx >= 0) {
+        const under = stack[underIdx];
+        const etchDepth = Math.min(top.thickness, under.thickness);
+        under.thickness = Math.max(0, under.thickness - etchDepth);
+        under.pattern = top.pattern; // 視覺化標示轉印圖形
+        log(`蝕刻：以 PR 圖形「${top.pattern}」對 ${under.name} 蝕刻 ${etchDepth} nm（部分蝕刻）`);
+      } else {
+        stack.pop();
+        log('蝕刻：未受保護，移除最上層薄膜');
+      }
+      draw();
+    }
+
+    function resetAll() {
+      stack.length = 0;
+      historyEl.innerHTML = '';
+      log('🔄 重置專案');
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 從底開始堆疊向上畫
+      let currentTopY = canvas.height;
+
+      for (let i = 0; i < stack.length; i++) {
+        const L = stack[i];
+        const hPx = Math.max(1, L.thickness * nmToPx); // 至少 1px 以便可視
+        currentTopY -= hPx;
+
+        // 畫底層矩形（整層）
+        ctx.fillStyle = L.color;
+        ctx.fillRect(40, currentTopY, 440, hPx);
+        ctx.strokeStyle = "#111827";
+        ctx.strokeRect(40, currentTopY, 440, hPx);
+
+        // 依 pattern 製作開口（視覺化）
+        if (L.pattern && L.pattern !== 'none') {
+          if (L.pattern === 'stripe') {
+            for (let x = 40; x < 480; x += 28) {
+              ctx.clearRect(x, currentTopY, 14, hPx);
+            }
+          } else if (L.pattern === 'circle') {
+            ctx.save();
+            ctx.beginPath();
+            const cx = 260; // 中心
+            const cy = currentTopY + hPx / 2;
+            const r = Math.min(60, hPx); // 半徑與層高相關
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.clearRect(40, currentTopY, 440, hPx);
+            ctx.restore();
+          }
+        }
+
+        // 材料名稱與厚度標示
+        ctx.fillStyle = "#111827";
+        ctx.font = "12px sans-serif";
+        ctx.fillText(`${L.name} (${L.thickness} nm)`, 46, currentTopY + Math.min(hPx - 4, 14));
+      }
+    }
+
+    // 初始畫布
+    draw();
+  </script>
+</body>
+</html>
