@@ -1,9 +1,13 @@
-/* 關卡頁：載入題目與答案（qid），支援拖放、細分配分（順序 0.5 + 配對 0.5） */
+/* 關卡頁（整合題庫版）
+ * 讀取 src/game/text/q{qid}_prompt.json：
+ * {
+ *   title, coachText, video,
+ *   images: [...], order: [...], pairs: {img:text},
+ *   coach, figure
+ * }
+ * 規則：同欄「圖片+文字」要同時正確且順序正確，三欄全對才過關
+ */
 (function () {
-  // 取得專案根（支援 GitHub Pages 子路徑）
-  //const seg = window.location.pathname.split("/").filter(Boolean);
-  //const BASE = seg.length > 0 ? ("/" + seg[0] + "/") : "/";
-
   // 取得 qid
   const params = new URLSearchParams(location.search);
   const QID = (() => {
@@ -12,232 +16,164 @@
   })();
 
   // 路徑
-  const IMG_DIR    = "src/game/img/";
-  const TEXT_URL   = `src/game/text/q${QID}_text.json`;   // ["設計","製造","封測"]
-  const ANSWER_URL = `src/game/answer/q${QID}_answer.json`; // { order:[...], pairs:{ "1-1.jpg":"設計", ... } }
-  const TITLE_URL  = `src/game/text/q${QID}_title.json`;  // { "title":"..." } 或直接字串
+  const IMG_DIR = `src/game/img/`;
+  const PROMPT_URL = `src/game/text/q${QID}_prompt.json`;
 
-  // 預設 3 張圖片（你也可以依需要改成從 JSON 載入）
-  let images = [`${QID}-1.jpg`, `${QID}-2.jpg`, `${QID}-3.jpg`];
-  let texts = [];
-  let answer = null;
-
-  // 元素
+  // DOM
   const bigPrompt = document.getElementById("bigPrompt");
   const imgPool = document.getElementById("imgPool");
   const textPool = document.getElementById("textPool");
   const targets = Array.from(document.querySelectorAll(".target"));
-
   const submitBtn = document.getElementById("submitBtn");
   const resetBtn = document.getElementById("resetBtn");
-
   const overlay = document.getElementById("resultOverlay");
   const resultText = document.getElementById("resultText");
-  const breakdown = document.getElementById("breakdown");
-  const backBtn = document.getElementById("backBtn");
-  const continueBtn = document.getElementById("continueBtn");
+  const leftBtn = document.getElementById("leftActionBtn");
+  const rightBtn = document.getElementById("rightActionBtn");
+  const coachText = document.getElementById("coachText");
+  const coachAvatar = document.getElementById("coachAvatar");
+  const rightFigure = document.getElementById("rightFigure");
 
-  // 小工具
-  function shuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+  // 題庫資料
+  let DATA = null;          // 整個 q{qid}_prompt.json
+  let images = [];          // 例：["1-1.jpg","1-2.jpg","1-3.jpg"]
+  let texts = [];           // 例：["設計","製造","封測"]
 
-  // 卡片
-  function createImgCard(name) {
+  // 工具
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+
+  function createImgCard(name){
     const d = document.createElement("div");
-    d.className = "card img";
-    d.draggable = true;
-    d.dataset.type = "img";
-    d.dataset.id = name;
-
+    d.className = "card img"; d.draggable = true;
+    d.dataset.type = "img"; d.dataset.id = name;
     const img = document.createElement("img");
-    img.src = IMG_DIR + name;
-    img.alt = name;
-    img.onerror = () => console.warn("圖片載入失敗：", img.src);
-
+    img.src = IMG_DIR + name; img.alt = name;
     d.appendChild(img);
-
-    d.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData(
-        "text/plain",
-        JSON.stringify({ type: "img", id: name })
-      );
+    d.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", JSON.stringify({type:"img",id:name}));
     });
     return d;
   }
-
-  function createTextCard(text) {
+  function createTextCard(text){
     const d = document.createElement("div");
-    d.className = "card text";
-    d.draggable = true;
-    d.dataset.type = "text";
-    d.dataset.id = text;
+    d.className = "card text"; d.draggable = true;
+    d.dataset.type = "text"; d.dataset.id = text;
     d.textContent = text;
-
-    d.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData(
-        "text/plain",
-        JSON.stringify({ type: "text", id: text })
-      );
+    d.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", JSON.stringify({type:"text",id:text}));
     });
     return d;
   }
+  function sendBack(card){
+    if (card.classList.contains("img")) imgPool.appendChild(createImgCard(card.dataset.id));
+    else textPool.appendChild(createTextCard(card.dataset.id));
+  }
 
-  // 目標格（接收拖放）
-  targets.forEach((t) => {
-    t.addEventListener("dragover", (e) => e.preventDefault());
-    t.addEventListener("drop", (e) => {
+  // 目標區拖放
+  targets.forEach(t=>{
+    t.addEventListener("dragover", e=> e.preventDefault());
+    t.addEventListener("drop", e=>{
       e.preventDefault();
-      let data;
-      try {
-        data = JSON.parse(e.dataTransfer.getData("text/plain"));
-      } catch (err) {
-        return;
-      }
+      let data; try{ data = JSON.parse(e.dataTransfer.getData("text/plain")); }catch{ return; }
       if (!data || data.type !== t.dataset.accept) return;
-      // 若該格已有舊卡，先送回池
-      if (t.firstChild) {
-        sendBack(t.firstChild);
-        t.innerHTML = "";
-      }
-      const card =
-        data.type === "img" ? createImgCard(data.id) : createTextCard(data.id);
-      t.classList.add("filled");
-      t.innerHTML = "";
-      t.appendChild(card);
+      if (t.firstChild){ sendBack(t.firstChild); t.innerHTML=""; }
+      const card = data.type==="img"? createImgCard(data.id): createTextCard(data.id);
+      t.classList.add("filled"); t.innerHTML=""; t.appendChild(card);
     });
   });
 
-  function sendBack(card) {
-    if (card.classList.contains("img")) {
-      imgPool.appendChild(createImgCard(card.dataset.id));
-    } else {
-      textPool.appendChild(createTextCard(card.dataset.id));
-    }
+  function populatePools(){
+    imgPool.innerHTML=""; textPool.innerHTML="";
+    shuffle(images.slice()).forEach(n=> imgPool.appendChild(createImgCard(n)));
+    // 文本從 order 推出（確保與題庫一致）
+    const allTexts = Array.isArray(DATA.order) ? DATA.order.slice() : [];
+    shuffle(allTexts).forEach(t=> textPool.appendChild(createTextCard(t)));
+    texts = allTexts;
   }
 
-  // 填充左右兩區
-  function populatePools() {
-    imgPool.innerHTML = "";
-    textPool.innerHTML = "";
-    shuffle(images.slice()).forEach((n) => imgPool.appendChild(createImgCard(n)));
-    shuffle(texts.slice()).forEach((t) => textPool.appendChild(createTextCard(t)));
-  }
-
-  // 收集作答
-  function collectAnswer() {
-    return [0, 1, 2].map((i) => {
-      const imgBox = document.querySelector(
-        `.target.img[data-slot="${i}"] .card`
-      );
-      const txtBox = document.querySelector(
-        `.target.text[data-slot="${i}"] .card`
-      );
-      return {
-        img: imgBox ? imgBox.dataset.id : null,
-        text: txtBox ? txtBox.dataset.id : null,
-      };
+  function collectRows(){
+    return [0,1,2].map(i=>{
+      const imgBox = document.querySelector(`.target.img[data-slot="${i}"] .card`);
+      const txtBox = document.querySelector(`.target.text[data-slot="${i}"] .card`);
+      return { img: imgBox ? imgBox.dataset.id : null, text: txtBox ? txtBox.dataset.id : null };
     });
   }
 
-  // 細分配分：順序正確 0.5 + 圖文配對 0.5
-  function scoreAnswerDetailed() {
-    const rows = collectAnswer();
-    let total = 0;
-    const detail = [];
-
-    for (let i = 0; i < 3; i++) {
-      const wantText = (answer.order || [])[i];
+  // 規則：同欄配對 + 文字在正確欄位
+  function isAllCorrect(){
+    if (!DATA) return false;
+    const rows = collectRows();
+    if (rows.some(r=>!r.img || !r.text)) return false;
+    for (let i=0;i<3;i++){
+      const wantText = (DATA.order || [])[i];
       const row = rows[i];
-      let s = 0;
-
-      if (row.img && row.text) {
-        const orderOK = row.text === wantText;
-        const pairOK = (answer.pairs || {})[row.img] === row.text;
-        if (orderOK) s += 0.5;
-        if (pairOK) s += 0.5;
-        detail.push({ i, orderOK, pairOK, score: s });
-      } else {
-        detail.push({ i, orderOK: false, pairOK: false, score: 0 });
-      }
-      total += s;
+      const pairOK = (DATA.pairs || {})[row.img] === row.text;
+      const orderOK = row.text === wantText;
+      if (!(pairOK && orderOK)) return false;
     }
-    const percent = Math.round((total / 3) * 100);
-    return { percent, detail };
+    return true;
   }
 
-  function showBreakdown(detail) {
-    if (!breakdown) return;
-    breakdown.innerHTML = detail
-      .map((d) => {
-        const idx = d.i + 1;
-        const order = d.orderOK ? "✔順序" : "✖順序";
-        const pair = d.pairOK ? "✔配對" : "✖配對";
-        const cls = d.score === 1 ? "ok" : d.score === 0.5 ? "half" : "bad";
-        return `<div class="${cls}">第${idx}格：${order}、${pair}（${d.score.toFixed(
-          1
-        )}）</div>`;
-      })
-      .join("");
-  }
-
-  // 事件
-  if (submitBtn) {
-    submitBtn.addEventListener("click", () => {
-      if (!answer) return;
-      const { percent, detail } = scoreAnswerDetailed();
-      if (resultText) resultText.textContent = `已達正確 ${percent}%`;
-      showBreakdown(detail);
-      if (overlay) overlay.classList.remove("hidden");
-    });
-  }
-
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      targets.forEach((t) => {
-        t.innerHTML = "";
-        t.classList.remove("filled");
-      });
-      populatePools();
-      if (overlay) overlay.classList.add("hidden");
-    });
-  }
-
-  if (backBtn) backBtn.addEventListener("click", () => (location.href = "choose_video.html"));
-  if (continueBtn) continueBtn.addEventListener("click", () => overlay && overlay.classList.add("hidden"));
-
-  // 初始化：載入題目 / 答案
-  async function init() {
-    try {
-      // 題目標題
-      const tp = await fetch(TITLE_URL);
-      if (tp.ok) {
-        const tjson = await tp.json();
-        const titleText = typeof tjson === "string" ? tjson : tjson.title || "";
-        if (titleText && bigPrompt) bigPrompt.textContent = titleText;
-      }
-
-      // 文字選項
-      const tRes = await fetch(TEXT_URL);
-      if (!tRes.ok) throw new Error(`讀取文字失敗：${TEXT_URL}（HTTP ${tRes.status}）`);
-      texts = await tRes.json();
-
-      // 答案
-      const aRes = await fetch(ANSWER_URL);
-      if (!aRes.ok) throw new Error(`讀取答案失敗：${ANSWER_URL}（HTTP ${aRes.status}）`);
-      answer = await aRes.json();
-
-    } catch (err) {
-      console.error(err);
-      alert("讀取題目/答案失敗，請檢查路徑與是否透過 http(s) 伺服器開啟。");
-      return;
-    }
+  function doReset(){
+    targets.forEach(t=>{ t.innerHTML=""; t.classList.remove("filled"); });
     populatePools();
   }
 
+  // 送出
+  if (submitBtn){
+    submitBtn.addEventListener("click", ()=>{
+      const ok = isAllCorrect();
+      overlay.classList.remove("hidden");
+      if (ok){
+        resultText.textContent = "結果：對";
+        leftBtn.textContent = "恭喜過關!";
+        rightBtn.textContent = "再玩一次";
+        leftBtn.onclick = ()=> location.href = "index.html";
+        rightBtn.onclick = ()=> location.href = "choose_video.html";
+      }else{
+        resultText.textContent = "結果：錯";
+        leftBtn.textContent = "重看影片";
+        rightBtn.textContent = "再試一次";
+
+        // 回影片：播放完返回本題
+        leftBtn.onclick = ()=>{
+          const ret = encodeURIComponent(`ic_game.html?qid=${QID}`);
+          location.href = `choose_video.html?play=${QID}&return=${ret}`;
+        };
+        rightBtn.onclick = ()=>{
+          overlay.classList.add("hidden");
+          doReset();
+        };
+      }
+    });
+  }
+  if (resetBtn) resetBtn.addEventListener("click", doReset);
+
+  // 初始化：讀整合題庫
+  async function init(){
+    try{
+      const r = await fetch(PROMPT_URL);
+      if (!r.ok) throw new Error(`讀取題庫失敗：${PROMPT_URL}`);
+      DATA = await r.json();
+
+      // 大標題
+      if (DATA.title && bigPrompt) bigPrompt.textContent = DATA.title;
+
+      // 左下說話框
+      if (DATA.coachText) coachText.textContent = DATA.coachText;
+
+      // 角色圖
+      if (DATA.coach) coachAvatar.src = IMG_DIR + DATA.coach;
+      if (DATA.figure) rightFigure.src = IMG_DIR + DATA.figure;
+
+      // 圖片清單
+      images = Array.isArray(DATA.images) ? DATA.images.slice() : [];
+
+      populatePools();
+    }catch(err){
+      console.error(err);
+      alert("載入題庫失敗，請確認檔案路徑。");
+    }
+  }
   init();
 })();
