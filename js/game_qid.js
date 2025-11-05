@@ -27,6 +27,7 @@
   const rightBtn    = document.getElementById("rightActionBtn");
   const coachTextEl = document.getElementById("coachText");
   const coachImage  = document.getElementById("coachImage");
+  const detailList = document.getElementById("detailList");   // 新增：列表節點
 
   // 題庫
   let DATA = null;
@@ -167,18 +168,7 @@
     populatePools();
   }
 
-  // 送出
-  const overlay    = document.getElementById("resultOverlay");
-  const resultText = document.getElementById("resultText");
-  const leftBtn    = document.getElementById("leftActionBtn");
-  const rightBtn   = document.getElementById("rightActionBtn");
 
-// 送出
-const overlay    = document.getElementById("resultOverlay");
-const resultText = document.getElementById("resultText");
-const leftBtn    = document.getElementById("leftActionBtn");
-const rightBtn   = document.getElementById("rightActionBtn");
-const detailList = document.getElementById("detailList");   // 新增：列表節點
 
 // 逐組檢查：回傳 [{ok:bool, img, text, wantText}, ...]
 function judgeGroups() {
