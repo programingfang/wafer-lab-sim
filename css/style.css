@@ -1,0 +1,25 @@
+* { box-sizing: border-box; }
+:root { --bg:#f7f9fc; --txt:#111827; --muted:#6b7280; --bd:#e5e7eb; --primary:#2563eb; }
+html, body { height:100%; }
+body { margin:0; font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif; color:var(--txt); background:var(--bg); }
+.centered { display:flex; align-items:center; justify-content:center; }
+.home { text-align:center; }
+.title { font-size:34px; margin-bottom:18px; }
+.btn { padding:10px 14px; border:1px solid var(--bd); border-radius:10px; background:#fff; color:var(--txt); cursor:pointer; }
+.btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#111827; color:#fff; }
+.container { padding:16px; }
+.muted { color:var(--muted); }
+.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
+.card { border:1px solid var(--bd); border-radius:12px; background:#fff; overflow:hidden; cursor:pointer; position:relative; }
+.thumb iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+.thumb { width:100%; height:220px; display:flex; align-items:center; justify-content:center; background:#fff; position:relative; aspect-ratio: 1 / 1.414; }
+.thumb .pdfLayer { position:absolute; inset:0; }
+.thumb .svgOverlay { position:absolute; inset:0; pointer-events:none; }
+.card .meta { padding:8px 10px; font-size:14px; border-top:1px solid var(--bd); }
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; padding:16px; }
+.overlay.hidden { display:none; }
+.overlay-inner { background:#fff; border-radius:12px; padding:12px; max-width:900px; width:100%; }
+.overlay-inner video { width:100%; height:auto; background:#000; border-radius:8px; }
+.overlay-actions { margin-top:10px; display:flex; justify-content:flex-end; }
+.mt { margin-top:12px; }

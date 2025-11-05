@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IC是如何製造的 - 關卡1</title>
+  <link rel="stylesheet" href="css\game.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>IC是如何製造的</h1>
+    <div class="actions">
+      <button id="resetBtn" class="btn">重置</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="left">
+      <div class="block imgs">
+        <h2>圖片區</h2>
+        <div id="imgPool" class="pool"></div>
+      </div>
+      <div class="block texts">
+        <h2>文字區</h2>
+        <div id="textPool" class="pool"></div>
+      </div>
+    </section>
+
+    <section class="right">
+      <h2>作答區</h2>
+      <div id="board" class="board"></div>
+      <div class="hint">把圖片與文字各自拖到同一列的格子。三列都填滿後會跳出確認視窗。</div>
+    </section>
+  </main>
+
+  <div id="confirmOverlay" class="overlay hidden">
+    <div class="overlay-inner">
+      <p>是否送出答案？</p>
+      <div class="row">
+        <button id="okBtn" class="btn primary">確認</button>
+        <button id="cancelBtn" class="btn">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js\game_qid.js"></script>
+</body>
+</html>
