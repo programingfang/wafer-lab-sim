@@ -9,6 +9,24 @@ window.WAFER_VIDEOS = [
     svg: "ic_make.svg",
     pdf: "image1.pdf"
   },
+  {
+    n: 2,
+    qid: 2,
+    title: "IC 是如何製造的2",
+    file: "ic_make_2.mp4",
+    // 圖像由一個 SVG + 一個對應 PDF 組成
+    svg: "ic_make.svg",
+    pdf: "image2.pdf"
+  },
+  {
+    n: 3,
+    qid: 3,
+    title: "IC 是如何製造的3",
+    file: "ic_make_3.mp4",
+    // 圖像由一個 SVG + 一個對應 PDF 組成
+    svg: "ic_make.svg",
+    pdf: "image3.pdf"
+  },
 
   // 範例：第二、三支影片對應不同 PDF（共用同一個 SVG）
   // { n: 2, qid: 2, title: "薄膜沉積入門", file: "ic_make_2.mp4", svg: "ic_make.svg", pdf: "image2.pdf" },

@@ -1,8 +1,8 @@
 /* 關卡頁：載入題目與答案（qid），支援拖放、細分配分（順序 0.5 + 配對 0.5） */
 (function () {
   // 取得專案根（支援 GitHub Pages 子路徑）
-  const seg = window.location.pathname.split("/").filter(Boolean);
-  const BASE = seg.length > 0 ? ("/" + seg[0] + "/") : "/";
+  //const seg = window.location.pathname.split("/").filter(Boolean);
+  //const BASE = seg.length > 0 ? ("/" + seg[0] + "/") : "/";
 
   // 取得 qid
   const params = new URLSearchParams(location.search);
@@ -12,10 +12,10 @@
   })();
 
   // 路徑
-  const IMG_DIR    = BASE + "src/game/img/";
-  const TEXT_URL   = BASE + `src/game/text/q${QID}_text.json`;   // ["設計","製造","封測"]
-  const ANSWER_URL = BASE + `src/game/answer/q${QID}_answer.json`; // { order:[...], pairs:{ "1-1.jpg":"設計", ... } }
-  const TITLE_URL  = BASE + `src/game/text/q${QID}_title.json`;  // { "title":"..." } 或直接字串
+  const IMG_DIR    = "src/game/img/";
+  const TEXT_URL   = `src/game/text/q${QID}_text.json`;   // ["設計","製造","封測"]
+  const ANSWER_URL = `src/game/answer/q${QID}_answer.json`; // { order:[...], pairs:{ "1-1.jpg":"設計", ... } }
+  const TITLE_URL  = `src/game/text/q${QID}_title.json`;  // { "title":"..." } 或直接字串
 
   // 預設 3 張圖片（你也可以依需要改成從 JSON 載入）
   let images = [`${QID}-1.jpg`, `${QID}-2.jpg`, `${QID}-3.jpg`];
