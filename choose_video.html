@@ -2,33 +2,19 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>選擇教學影片 - waferLab</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>選擇關卡 - 矽晶圓密探</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/video.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>選擇教學影片</h1>
-    <a class="btn" href="index.html">回首頁</a>
-  </header>
-
+  <header class="site-header"><h1>選擇關卡</h1></header>
   <main class="container">
-    <section>
-      <p class="muted">點圖片播放對應影片（ic_make_N.mp4）。影片結束後自動前往遊戲頁（ic_gmae）。</p>
-      <div id="videoGrid" class="grid"></div>
-    </section>
+    <div class="video-grid" id="videoGrid"></div>
   </main>
 
-  <div id="playerOverlay" class="overlay hidden">
-    <div class="overlay-inner">
-      <video id="player" controls playsinline></video>
-      <div class="overlay-actions">
-        <button class="btn" id="closePlayer">關閉</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- 先載入影片清單（含 svg+pdf 對應），再載入頁面邏輯 -->
   <script src="js/video_list.js"></script>
-  <script src="js/js_choose_video_integrated.js"></script>
+  <script src="js/choose_video.js"></script>
 </body>
 </html>
