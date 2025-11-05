@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>IC是如何製造的 - 關卡1</title>
-  <link rel="stylesheet" href="css\game.css" />
+  <title>矽晶圓密探 - 關卡</title>
+  <link rel="stylesheet" href="game.css" />
 </head>
 <body>
+  <!-- 頁首 -->
   <header class="topbar">
-    <h1>IC是如何製造的</h1>
-    <div class="actions">
-      <button id="resetBtn" class="btn">重置</button>
-    </div>
+    <h1>矽晶圓密探</h1>
   </header>
 
   <main class="layout">
+    <!-- 左側：圖片區 + 文字區 -->
     <section class="left">
+      <div class="subtitle">請排列出 IC 是如何製造的</div>
       <div class="block imgs">
         <h2>圖片區</h2>
         <div id="imgPool" class="pool"></div>
@@ -26,23 +26,57 @@
       </div>
     </section>
 
+    <!-- 右側：作答區（橫向三格 + 箭頭） -->
     <section class="right">
-      <h2>作答區</h2>
-      <div id="board" class="board"></div>
-      <div class="hint">把圖片與文字各自拖到同一列的格子。三列都填滿後會跳出確認視窗。</div>
+      <div class="subtitle">請排列出 IC 是如何製造的</div>
+
+      <div id="flowRow" class="flow-row">
+        <!-- slot-0 -->
+        <div class="flow-col">
+          <div class="target img" data-accept="img" data-slot="0"></div>
+          <div class="target text" data-accept="text" data-slot="0"></div>
+        </div>
+
+        <div class="arrow">➜</div>
+
+        <!-- slot-1 -->
+        <div class="flow-col">
+          <div class="target img" data-accept="img" data-slot="1"></div>
+          <div class="target text" data-accept="text" data-slot="1"></div>
+        </div>
+
+        <div class="arrow">➜</div>
+
+        <!-- slot-2 -->
+        <div class="flow-col">
+          <div class="target img" data-accept="img" data-slot="2"></div>
+          <div class="target text" data-accept="text" data-slot="2"></div>
+        </div>
+      </div>
+
+      <div class="actions-top">
+        <button id="submitBtn" class="btn primary">排好了</button>
+      </div>
     </section>
   </main>
 
-  <div id="confirmOverlay" class="overlay hidden">
+  <!-- 底部工具列：重製 -->
+  <footer class="bottombar">
+    <button id="resetBtn" class="btn">重製</button>
+  </footer>
+
+  <!-- 結果彈窗 -->
+  <div id="resultOverlay" class="overlay hidden">
     <div class="overlay-inner">
-      <p>是否送出答案？</p>
+      <p id="resultText" class="result-text">已達正確 0%</p>
       <div class="row">
-        <button id="okBtn" class="btn primary">確認</button>
-        <button id="cancelBtn" class="btn">取消</button>
+        <button id="backBtn" class="btn">回去看影片</button>
+        <button id="continueBtn" class="btn primary">繼續作答</button>
       </div>
     </div>
   </div>
 
+  <!-- 注意：改用支援 qid 的版本 -->
   <script src="js\game_qid.js"></script>
 </body>
 </html>

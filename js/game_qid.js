@@ -1,5 +1,6 @@
-// === game.js (qid-ready, same-origin safe) ===
+// === game_qid.js (UI 改版：橫向 + 排好了 + 百分比) ===
 (function(){
+  // 計算 BASE（讓 GitHub Pages / 本機都能用）
   const seg = window.location.pathname.split('/').filter(Boolean);
   const BASE = seg.length > 0 ? ('/' + seg[0] + '/') : '/';
 
@@ -10,22 +11,30 @@
   }
   const QID = getQid();
 
+  // 本題資源
   const IMG_DIR    = BASE + "src/game/img/";
   const TEXT_URL   = BASE + `src/game/text/q${QID}_text.json`;
   const ANSWER_URL = BASE + `src/game/answer/q${QID}_answer.json`;
 
+  // 本題圖片（QID-1.jpg ~ QID-3.jpg）
   let images = [ `${QID}-1.jpg`, `${QID}-2.jpg`, `${QID}-3.jpg` ];
   let texts = [];
   let answer = null;
 
+  // 區塊
   const imgPool = document.getElementById("imgPool");
   const textPool = document.getElementById("textPool");
-  const board = document.getElementById("board");
 
-  const overlay = document.getElementById("confirmOverlay");
-  const okBtn = document.getElementById("okBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
+  // 右側三欄 targets
+  const targets = Array.from(document.querySelectorAll(".target"));
+  const submitBtn = document.getElementById("submitBtn");
   const resetBtn = document.getElementById("resetBtn");
+
+  // 結果彈窗
+  const overlay = document.getElementById("resultOverlay");
+  const resultText = document.getElementById("resultText");
+  const backBtn = document.getElementById("backBtn");
+  const continueBtn = document.getElementById("continueBtn");
 
   function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
 
@@ -54,26 +63,6 @@
     return d;
   }
 
-  function createSlotRow(i){
-    const row = document.createElement("div");
-    row.className = "slot";
-    const tImg = document.createElement("div");
-    tImg.className = "target img";
-    tImg.dataset.accept = "img";
-    tImg.dataset.slot = i;
-    enableDrop(tImg);
-
-    const tTxt = document.createElement("div");
-    tTxt.className = "target text";
-    tTxt.dataset.accept = "text";
-    tTxt.dataset.slot = i;
-    enableDrop(tTxt);
-
-    row.appendChild(tImg);
-    row.appendChild(tTxt);
-    board.appendChild(row);
-  }
-
   function attachDnD(el){
     el.addEventListener("dragstart", e => {
       e.dataTransfer.setData("text/plain", JSON.stringify({
@@ -83,25 +72,23 @@
     });
   }
 
-  function enableDrop(target){
-    target.addEventListener("dragover", e => { e.preventDefault(); });
-    target.addEventListener("drop", e => {
+  // 啟用拖放到 target
+  targets.forEach(t => {
+    t.addEventListener("dragover", e => e.preventDefault());
+    t.addEventListener("drop", e => {
       e.preventDefault();
       const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-      if (data.type !== target.dataset.accept) return;
-
-      if (target.firstChild){ sendBack(target.firstChild); target.innerHTML=""; }
-
+      if (data.type !== t.dataset.accept) return;
+      // 若已有子元素，先退回原位
+      if (t.firstChild){ sendBack(t.firstChild); t.innerHTML=""; }
       const card = (data.type === "img") ? createImgCard(data.id) : createTextCard(data.id);
       card.dataset.origin = "slot";
-      card.dataset.slot = target.dataset.slot;
-      target.classList.add("filled");
-      target.innerHTML = "";
-      target.appendChild(card);
-
-      checkFull();
+      card.dataset.slot = t.dataset.slot;
+      t.classList.add("filled");
+      t.innerHTML = "";
+      t.appendChild(card);
     });
-  }
+  });
 
   function sendBack(card){
     if (card.dataset.type === "img"){
@@ -118,70 +105,74 @@
     shuffle(texts.slice()).forEach(t => textPool.appendChild(createTextCard(t)));
   }
 
-  function buildBoard(){
-    board.innerHTML = "";
-    for (let i=0;i<3;i++) createSlotRow(i);
-  }
-
-  function checkFull(){
-    const filled = board.querySelectorAll(".target.filled").length;
-    if (filled === 6){ overlay.classList.remove("hidden"); }
-  }
-
   function collectAnswer(){
-    const rows = Array.from(board.querySelectorAll(".slot"));
-    return rows.map(r => {
-      const imgBox = r.querySelector('.target.img .card');
-      const txtBox = r.querySelector('.target.text .card');
-      return { img: imgBox ? imgBox.dataset.id : null, text: txtBox ? txtBox.dataset.id : null };
+    // 收集三欄的 {img, text}
+    const cols = [0,1,2].map(i => {
+      const imgBox = document.querySelector(`.target.img[data-slot="${i}"] .card`);
+      const txtBox = document.querySelector(`.target.text[data-slot="${i}"] .card`);
+      return {
+        img:  imgBox ? imgBox.dataset.id  : null,
+        text: txtBox ? txtBox.dataset.id : null
+      };
     });
+    return cols;
   }
 
-  function checkAnswer(){
-    const result = collectAnswer();
-    const orderOK = result.every((row, i) => row.text === answer.order[i]);
-    const pairsOK = result.every(row => answer.pairs[row.img] === row.text);
-    return orderOK && pairsOK;
+  function scoreAnswer(){
+    const cols = collectAnswer();
+    let correctCols = 0;
+    for (let i=0;i<3;i++){
+      const wantText = (answer.order || [])[i];
+      const row = cols[i];
+      if (!row.img || !row.text) continue; // 未填滿不計分
+      const pairOK = (answer.pairs || {})[row.img] === row.text;
+      const orderOK = row.text === wantText;
+      if (pairOK && orderOK) correctCols += 1;
+    }
+    const percent = Math.round((correctCols / 3) * 100);
+    return { percent, filled: cols.every(r => r.img && r.text) };
   }
 
   function resetAll(){
-    buildBoard();
+    // 清空右側、重新洗牌左右池
+    targets.forEach(t => { t.innerHTML=""; t.classList.remove("filled"); });
     populatePools();
     overlay.classList.add("hidden");
   }
+
+  // 事件：排好了 -> 算分 + 顯示彈窗
+  submitBtn.addEventListener("click", () => {
+    const { percent, filled } = scoreAnswer();
+    resultText.textContent = `已達正確 ${percent}%`;
+    overlay.classList.remove("hidden");
+  });
+
+  // 回去看影片 / 繼續作答
+  backBtn.addEventListener("click", () => {
+    window.location.href = "choose_video.html";
+  });
+  continueBtn.addEventListener("click", () => {
+    overlay.classList.add("hidden");
+  });
+
+  // 重製
+  resetBtn.addEventListener("click", resetAll);
 
   async function init(){
     try{
       const tRes = await fetch(TEXT_URL);
       if (!tRes.ok) throw new Error(`讀取文字失敗：${TEXT_URL}（HTTP ${tRes.status}）`);
       texts = await tRes.json();
-    }catch(err){
-      console.error(err);
-      alert("讀取文字失敗，請檢查路徑與是否透過 http(s) 伺服器開啟。");
-      return;
-    }
-
-    try{
       const aRes = await fetch(ANSWER_URL);
       if (!aRes.ok) throw new Error(`讀取答案失敗：${ANSWER_URL}（HTTP ${aRes.status}）`);
       answer = await aRes.json();
     }catch(err){
       console.error(err);
-      alert("讀取答案失敗，請檢查路徑與是否透過 http(s) 伺服器開啟。");
+      alert("讀取題目/答案失敗，請檢查路徑與是否透過 http(s) 伺服器開啟。");
       return;
     }
-
-    buildBoard();
     populatePools();
   }
-
-  document.getElementById("okBtn").addEventListener("click", () => {
-    overlay.classList.add("hidden");
-    if (checkAnswer()){ alert("恭喜過關！"); }
-    else { alert("再試一次！"); resetAll(); }
-  });
-  document.getElementById("cancelBtn").addEventListener("click", () => overlay.classList.add("hidden"));
-  document.getElementById("resetBtn").addEventListener("click", resetAll);
 
   init();
 })();
