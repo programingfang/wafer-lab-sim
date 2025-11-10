@@ -3,74 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>矽晶圓密探 - 關卡</title>
+  <title>矽晶圓密探 - 關卡挑戰</title>
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/game.css" />
 </head>
 <body>
-  <header class="site-header"><h1>矽晶圓密探</h1></header>
-
-  <div class="prompt-wrap">
-    <div id="bigPrompt" class="big-prompt"></div>
-  </div>
-
   <main class="layout">
-    <!-- 左欄：來源池 -->
+    <!-- 左側：圖片、文字、對話 -->
     <section class="left">
-      <div class="block imgs">
+      <div class="prompt-wrap">
+        <div id="bigPrompt" class="big-prompt"></div>
+      </div>
+
+      <div class="block">
         <h2>圖片區</h2>
         <div id="imgPool" class="pool"></div>
       </div>
-      <div class="block texts">
+
+      <div class="block">
         <h2>文字區</h2>
         <div id="textPool" class="pool"></div>
       </div>
+
+      <div class="block figure-row">
+        <!-- 左：對話框 -->
+        <div class="bubble-right" id="coachText"></div>
+
+        <!-- 右：角色圖片 -->
+        <div class="figure-img">
+          <img id="coachImage"/>
+        </div>
+      </div>
     </section>
 
-    <!-- 右欄：作答區 + 右下（對話框 + 教練圖） -->
+    <!-- 右側：作答區 -->
     <section class="right">
-      <div id="flowRow" class="flow-row">
+      <h2>作答區</h2>
+      <div class="flow-row">
         <div class="flow-col">
-          <div class="target img"  data-accept="img"  data-slot="0"></div>
+          <div class="target img" data-accept="img" data-slot="0"></div>
           <div class="target text" data-accept="text" data-slot="0"></div>
         </div>
-        <div class="arrow">➜</div>
+        <div class="arrow">→</div>
+
         <div class="flow-col">
-          <div class="target img"  data-accept="img"  data-slot="1"></div>
+          <div class="target img" data-accept="img" data-slot="1"></div>
           <div class="target text" data-accept="text" data-slot="1"></div>
         </div>
-        <div class="arrow">➜</div>
+        <div class="arrow">→</div>
+
         <div class="flow-col">
-          <div class="target img"  data-accept="img"  data-slot="2"></div>
+          <div class="target img" data-accept="img" data-slot="2"></div>
           <div class="target text" data-accept="text" data-slot="2"></div>
         </div>
       </div>
 
       <div class="actions-row">
         <button id="submitBtn" class="btn primary">排好了</button>
-        <button id="resetBtn"  class="btn">重製</button>
-      </div>
-
-      <!-- 右下：把 figure 一分為二（左：對話框 右：教練圖） -->
-      <div class="figure-row block">
-        <div class="bubble-right">
-          <div id="coachText"></div>
-        </div>
-        <div class="figure-img">
-          <img id="coachImage"/>
-        </div>
+        <button id="resetBtn" class="btn">重排一次</button>
       </div>
     </section>
   </main>
 
-  <!-- 結果浮層 -->
+  <!-- 結果彈窗 -->
   <div id="resultOverlay" class="overlay hidden">
     <div class="overlay-inner">
-      <p id="resultText" class="result-text">結果：—</p>
-	  <ul id="detailList" class="judge-list"></ul> <!-- 新增：逐組判定列表 -->
+      <div id="resultText" class="result-text">結果：—</div>
+
+      <ul id="detailList" class="judge-list">
+        <!-- 會由 JS 自動生成第1～3組 對 / 錯 -->
+      </ul>
+
       <div class="row gap">
-        <button id="leftActionBtn" class="btn"></button>
-        <button id="rightActionBtn" class="btn primary"></button>
+        <button id="leftActionBtn" class="btn primary">左按鈕</button>
+        <button id="rightActionBtn" class="btn">右按鈕</button>
       </div>
     </div>
   </div>
