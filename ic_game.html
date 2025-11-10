@@ -11,11 +11,10 @@
   <header class="site-header"><h1>矽晶圓密探</h1></header>
 
   <div class="prompt-wrap">
-    <div id="bigPrompt" class="big-prompt">請排列出 IC 是如何製造的</div>
+    <div id="bigPrompt" class="big-prompt"></div>
   </div>
 
   <main class="layout">
-    <!-- 左欄：來源池 -->
     <section class="left">
       <div class="block imgs">
         <h2>圖片區</h2>
@@ -27,7 +26,6 @@
       </div>
     </section>
 
-    <!-- 右欄：作答區 + 右下（對話框 + 教練圖） -->
     <section class="right">
       <div id="flowRow" class="flow-row">
         <div class="flow-col">
@@ -51,22 +49,21 @@
         <button id="resetBtn"  class="btn">再排一次</button>
       </div>
 
-      <!-- 右下：把 figure 一分為二（左：對話框 右：教練圖） -->
       <div class="figure-row block">
         <div class="bubble-right">
-          <div id="coachText">請把圖片與文字配成正確組合，並依序拖到上方三格！</div>
+          <div id="coachText"></div>
         </div>
         <div class="figure-img">
-          <img id="coachImage" src="src/game/img/coach_large.png" alt="教練" />
+          <img id="coachImage"/>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- 結果浮層 -->
   <div id="resultOverlay" class="overlay hidden">
     <div class="overlay-inner">
       <p id="resultText" class="result-text">結果：—</p>
+      <p id="resultSummary" class="result-summary"></p>
       <div class="row gap">
         <button id="leftActionBtn" class="btn"></button>
         <button id="rightActionBtn" class="btn primary"></button>
