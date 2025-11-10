@@ -1,51 +1,67 @@
-:root {
-  --blue: #4686B3;
-  --orange: #F97B3C;
-  --yellow: #E8C34A;
-  --green: #71C58A;
-  --bg: #F4F7FB;
-  --txt: #2D2D2D;
-}
+/* ========= 全站基礎（整合版） ========= */
 
+/* Reset（保守，不影響既有內容） */
 * { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+img { max-width: 100%; display: block; }
 
-body {
-  margin: 0;
-  font-family: "Poppins", "Noto Sans TC", sans-serif;
-  background: var(--bg);
-  color: var(--txt);
-}
-
-h1 {
-  color: #fff;
-  margin: 0;
-}
-
-button.btn, .btn {
-  background: var(--orange);
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 12px 30px;
-  font-size: 1.05rem;
-  cursor: pointer;
-  transition: 0.2s;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-}
-
-button:hover, .btn:hover {
-  transform: scale(1.05);
-}
-
-.site-header {
-  background: var(--blue);
-  padding: 12px 16px;
-  text-align: center;
-  border-bottom: 3px solid rgba(0, 0, 0, 0.05);
-}
-
+/* 版面容器：在需要時可套用 .container 居中 */
 .container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 0 16px;
 }
+
+/* ========= 頁首（Header） ========= */
+.site-header {
+  background: #ffffff;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  position: relative; /* 避免與其他元素重疊時出現層級問題 */
+  z-index: 5;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.5px;
+  padding: 14px 10px;
+}
+
+/* ========= 標題區（bigPrompt） ========= */
+/* 讓 bigPrompt 穩定地出現在 header 下方、置中、留白清楚 */
+.prompt-wrap {
+  width: 100%;
+  background: transparent;
+  padding: 10px 16px 0;
+}
+
+.big-prompt {
+  display: block;            /* 防止被其他樣式影響為 inline */
+  max-width: 1200px;         /* 與主要版面對齊 */
+  margin: 10px auto 8px;     /* 與 header 留出距離 */
+  text-align: center;        /* 置中對齊 */
+  color: #111827;
+  font-size: 2rem;           /* 與 game.css 同步或略大 */
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  line-height: 1.35;
+}
+
+/* 小裝置時縮小標題字級，避免換行過多 */
+@media (max-width: 1024px) {
+  .site-header h1 { font-size: 1.4rem; padding: 12px 8px; }
+  .big-prompt { font-size: 1.8rem; margin-top: 8px; }
+}
+@media (max-width: 768px) {
+  .site-header h1 { font-size: 1.25rem; padding: 10px 8px; }
+  .big-prompt { font-size: 1.5rem; margin-top: 6px; }
+}
+
+/* ========= 通用輔助 ========= */
+.row { display: flex; align-items: center; }
+.center { text-align: center; }
+.hidden { display: none !important; }

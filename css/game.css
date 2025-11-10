@@ -9,6 +9,7 @@ body {
   background-color: #fafafa;
   color: #111;
   font-family: "Noto Sans TC", sans-serif;
+  margin: 0;
 }
 
 @media (max-width: 1024px) {
@@ -19,6 +20,26 @@ body {
 @media (max-width: 768px) {
   html { font-size: 16px; }
   body { zoom: 1; }
+}
+
+/* ===== bigPrompt 樣式（同步 main.css） ===== */
+.big-prompt {
+  display: block;
+  text-align: center;
+  font-weight: 900;
+  font-size: 2rem;
+  color: #111827;
+  margin: 10px auto 20px;
+  line-height: 1.35;
+}
+
+.big-prompt.accent {
+  display: inline-block;
+  background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
+  color: #fff;
+  padding: 8px 22px;
+  border-radius: 10px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
 }
 
 /* ===== 基本版面 ===== */
@@ -120,7 +141,7 @@ body {
 
 /* ===== 目標框 ===== */
 .target {
-  border: 0px dashed #bbb;
+  border: 2px dashed #bbb;
   border-radius: 10px;
   background: #fff;
   display: flex;
@@ -221,7 +242,7 @@ body {
   border-left: 10px solid #fff3e0;
 }
 
-/* ===== 彈窗結果 ===== */
+/* ===== 結果浮層 ===== */
 .overlay {
   position: fixed;
   inset: 0;
