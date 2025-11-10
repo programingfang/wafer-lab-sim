@@ -9,12 +9,22 @@
 
 * { box-sizing: border-box; }
 
+/* === 全域背景設定（共用首頁的主視覺）=== */
 body {
-  margin: 0;
-  font-family: "Poppins", "Noto Sans TC", sans-serif;
-  background: var(--bg);
+  background: url("../src/img/main.png") center center / cover no-repeat fixed;
+  background-color: var(--bg); /* 若圖未載入仍有柔和底色 */
   color: var(--txt);
 }
+
+/* 避免內容被背景覆蓋時太暗，可加入輕透明遮罩（可選） */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2); /* 可調透明度 */
+  z-index: -1;
+}
+
 
 h1 {
   color: #fff;
