@@ -82,6 +82,121 @@
 
   // ====== 觸控拖曳：只搬移，不新建 ======
   function enableTouchDrag(card){
+  let dragging = false;
+  let offX = 0, offY = 0;
+
+  // 自動捲動控制
+  let rafId = null;
+  let autoScrollDir = 0; // -1 向上，1 向下，0 停止
+
+  const startAutoScroll = () => {
+    if (rafId) return;
+    const step = () => {
+      if (autoScrollDir !== 0) {
+        // 每禎小步捲動，讓使用者能「拖著卡片」把頁面帶到作答區
+        window.scrollBy(0, autoScrollDir * 8);
+        rafId = requestAnimationFrame(step);
+      } else {
+        rafId = null;
+      }
+    };
+    rafId = requestAnimationFrame(step);
+  };
+
+  const stopAutoScroll = () => {
+    autoScrollDir = 0;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  };
+
+  const onTouchStart = (e)=>{
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+
+    const rect = card.getBoundingClientRect();
+    offX = t.clientX - rect.left;
+    offY = t.clientY - rect.top;
+
+    // 讓卡片浮在最上層跟著手指移動
+    card.style.position = "fixed";
+    card.style.zIndex = "9999";
+    card.style.left = `${t.clientX - offX}px`;
+    card.style.top  = `${t.clientY - offY}px`;
+
+    dragging = true;
+  };
+
+  const onTouchMove = (e)=>{
+    if (!dragging) return;
+
+    // 阻止瀏覽器的預設滾動，改由我們自己的自動捲動控制
+    e.preventDefault();
+
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+
+    // 移動卡片
+    card.style.left = `${t.clientX - offX}px`;
+    card.style.top  = `${t.clientY - offY}px`;
+
+    // 邊緣自動捲動：接近頂/底 80px 觸發
+    const EDGE = 80;
+    if (t.clientY > window.innerHeight - EDGE) {
+      autoScrollDir = 1;  // 向下
+      startAutoScroll();
+    } else if (t.clientY < EDGE) {
+      autoScrollDir = -1; // 向上
+      startAutoScroll();
+    } else {
+      autoScrollDir = 0;
+      stopAutoScroll();
+    }
+  };
+
+  const onTouchEnd = (e)=>{
+    if (!dragging) return;
+    dragging = false;
+
+    stopAutoScroll();
+
+    // 還原定位
+    card.style.position = "";
+    card.style.left = "";
+    card.style.top = "";
+    card.style.zIndex = "";
+
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!t) return;
+
+    // 判斷落點
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const target = el && el.closest(".target");
+
+    if (target && target.dataset.accept === card.dataset.type){
+      // 正確的目標框：若已存在卡，先丟回來源池
+      if (target.firstChild) moveCardBack(target.firstChild);
+      if (card.parentElement && card.parentElement.classList.contains("target")) {
+        card.parentElement.classList.remove("filled");
+      }
+      target.appendChild(card);
+      target.classList.add("filled");
+    } else {
+      // 放回來源池
+      if (card.parentElement && card.parentElement.classList.contains("target")) {
+        card.parentElement.classList.remove("filled");
+      }
+      moveCardBack(card);
+    }
+  };
+
+  // 注意：passive: false 才能在 touchmove 裡 e.preventDefault()，否則無法阻止原生滾動
+  card.addEventListener("touchstart", onTouchStart, { passive: true });
+  card.addEventListener("touchmove",  onTouchMove,  { passive: false });
+  card.addEventListener("touchend",   onTouchEnd);
+}
+
     let dragging = false;
     let offX = 0, offY = 0;
 
