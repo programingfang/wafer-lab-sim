@@ -345,45 +345,33 @@ body { zoom: 1.2; }
 }
 
 /* === 手機優化：圖片區與作答區尺寸調整 === */
+/* 手機：目標框加大一些，卡片進格後自適應 */
 @media (max-width: 768px) {
-  /* 圖片池：一排兩張，間距稍小 */
-  #imgPool {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 8px;
-    min-height: 160px;
+  .flow-col {
+    grid-template-rows: 140px 58px; /* 原本如果更小，可略放大一些 */
+  }
+  .target {
+    min-height: 72px;              /* 增加高度，容錯更大 */
+    padding: 4px;
   }
 
-  /* 圖片卡片：等比縮放為 4:3，寬度填滿格子 */
-  .card.img {
+  /* 卡片在格子內：填滿寬度，維持 4:3，不會超出 */
+  .target .card.img {
     width: 100%;
     height: auto;
     aspect-ratio: 4 / 3;
-    border-radius: 10px;
-    padding: 6px;
+    padding: 4px;
   }
-  .card.img img {
+  .target .card.img img {
     width: 100%;
     height: 100%;
     object-fit: contain;
   }
 
-  /* 文字卡片也略縮，避免過寬 */
-  .card.text {
-    font-size: 1rem;
-    padding: 10px 12px;
+  /* 手機圖片池仍兩欄，避免卡片太寬 */
+  #imgPool {
+    grid-template-columns: repeat(2, 1fr);
   }
-
-  /* 作答區：目標框略小，方便在小螢幕操作 */
-  .flow-col {
-    grid-template-rows: 130px 54px;
-    row-gap: 8px;
-  }
-  .target {
-    border-width: 2px;
-  }
-
   /* 對話區塊改成直排，避免擠壓 */
   .figure-row {
     grid-template-columns: 1fr;
@@ -391,3 +379,16 @@ body { zoom: 1.2; }
     min-height: 0;
   }
 }
+
+/* 拖曳中縮小（滑鼠與觸控通用），只在拖曳狀態套用，不影響放入後尺寸 */
+.card.dragging {
+  transform: scale(0.82);          /* 視覺縮小，較容易放進格子 */
+  opacity: 0.95;
+}
+
+/* 針對圖片卡，在拖曳中再小一點，避免「塞不進去」 */
+.card.img.dragging {
+  width: 80% !important;           /* 只在拖曳浮動時生效 */
+  aspect-ratio: 4 / 3;
+}
+

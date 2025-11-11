@@ -84,7 +84,7 @@
   function enableTouchDrag(card){
     let dragging = false;
     let offX = 0, offY = 0;
-
+  
     // 自動捲動控制
     let rafId = null;
     let autoScrollDir = 0; // -1 向上，1 向下，0 停止
@@ -92,7 +92,7 @@
       if (rafId) return;
       const step = () => {
         if (autoScrollDir !== 0) {
-          window.scrollBy(0, autoScrollDir * 10); // 調整速度 10 可視需求增減
+          window.scrollBy(0, autoScrollDir * 10);
           rafId = requestAnimationFrame(step);
         } else {
           rafId = null;
@@ -104,31 +104,33 @@
       autoScrollDir = 0;
       if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     };
-
+  
     const onTouchStart = (e)=>{
       const t = e.touches && e.touches[0];
       if (!t) return;
       const rect = card.getBoundingClientRect();
       offX = t.clientX - rect.left;
       offY = t.clientY - rect.top;
+  
+      // 浮動跟手指 + 標記拖曳狀態（套用 .dragging 縮小）
+      card.classList.add("dragging");
       card.style.position = "fixed";
       card.style.zIndex = "9999";
       card.style.left = `${t.clientX - offX}px`;
       card.style.top  = `${t.clientY - offY}px`;
+  
       dragging = true;
     };
-
+  
     const onTouchMove = (e)=>{
       if (!dragging) return;
-      // 阻止瀏覽器預設滾動，改由自動捲動控制處理
       e.preventDefault();
-
+  
       const t = e.touches && e.touches[0];
       if (!t) return;
       card.style.left = `${t.clientX - offX}px`;
       card.style.top  = `${t.clientY - offY}px`;
-
-      // 靠近上下邊緣自動捲動
+  
       const EDGE = 80;
       if (t.clientY > window.innerHeight - EDGE) {
         autoScrollDir = 1;  // 向下
@@ -140,36 +142,49 @@
         stopAutoScroll();
       }
     };
-
+  
     const onTouchEnd = (e)=>{
       if (!dragging) return;
       dragging = false;
       stopAutoScroll();
-
-      // 還原定位
+  
+      // 還原定位與拖曳樣式
+      card.classList.remove("dragging");
       card.style.position = "";
       card.style.left = "";
       card.style.top = "";
       card.style.zIndex = "";
-
+  
       const t = e.changedTouches && e.changedTouches[0];
       if (!t) return;
-
+  
       const el = document.elementFromPoint(t.clientX, t.clientY);
       const target = el && el.closest(".target");
-
+  
       if (target && target.dataset.accept === card.dataset.type){
-        moveCardToTarget(card, target);
+        // 進格子前，如果該格已有卡，先放回來源
+        if (target.firstChild) moveCardBack(target.firstChild);
+        if (card.parentElement && card.parentElement.classList.contains("target")) {
+          card.parentElement.classList.remove("filled");
+        }
+        target.appendChild(card);
+        target.classList.add("filled");
+        // 讓卡片在格子內依 CSS 自適應（寬 100%、4:3）
+        card.style.width = "";  // 交給 .target .card.img 的 CSS 規則
+        card.style.height = "";
       } else {
+        if (card.parentElement && card.parentElement.classList.contains("target")) {
+          card.parentElement.classList.remove("filled");
+        }
         moveCardBack(card);
       }
     };
-
-    // 注意：touchmove 需 passive: false 才能 preventDefault()
+  
     card.addEventListener("touchstart", onTouchStart, { passive: true });
     card.addEventListener("touchmove",  onTouchMove,  { passive: false });
     card.addEventListener("touchend",   onTouchEnd);
   }
+
 
   // ====== 搬移函式 ======
   function moveCardToTarget(card, target){
