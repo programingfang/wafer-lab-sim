@@ -340,8 +340,23 @@ body { zoom: 1.2; }
 @media (max-width: 1100px) {
   .layout { grid-template-columns: 1fr; }
   .flow-row { grid-template-columns: 1fr; row-gap: 12px; }
-  .arrow { display: none; }
   .figure-row { grid-template-columns: 1fr; }
+  .arrow {
+    display: block !important;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    color: #0a59e1;
+    margin: 4px 0;
+  }
+  /* 若 .arrow 內是 ➜，在直排時改成 ↓ 比較直覺 */
+  .arrow::before {
+    content: "↓";
+    font-size: 1.4rem;
+    display: inline-block;
+  }
+  /* 避免原本的箭頭字元重複顯示 */
+  .arrow { font-size: 0; }
 }
 
 /* === 手機優化：圖片區與作答區尺寸調整 === */
@@ -378,17 +393,18 @@ body { zoom: 1.2; }
     gap: 10px;
     min-height: 0;
   }
+   /* 拖曳中縮小（滑鼠與觸控通用），只在拖曳狀態套用，不影響放入後尺寸 */
+  .card.dragging {
+    transform: scale(0.82);          /* 視覺縮小，較容易放進格子 */
+    opacity: 0.95;
+  }
+  
+  /* 針對圖片卡，在拖曳中再小一點，避免「塞不進去」 */
+  .card.img.dragging {
+    width: 80% !important;           /* 只在拖曳浮動時生效 */
+    aspect-ratio: 4 / 3;
+  }
 }
 
-/* 拖曳中縮小（滑鼠與觸控通用），只在拖曳狀態套用，不影響放入後尺寸 */
-.card.dragging {
-  transform: scale(0.82);          /* 視覺縮小，較容易放進格子 */
-  opacity: 0.95;
-}
 
-/* 針對圖片卡，在拖曳中再小一點，避免「塞不進去」 */
-.card.img.dragging {
-  width: 80% !important;           /* 只在拖曳浮動時生效 */
-  aspect-ratio: 4 / 3;
-}
 
