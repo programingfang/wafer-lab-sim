@@ -147,31 +147,34 @@
       if (!dragging) return;
       dragging = false;
       stopAutoScroll();
-  
-      // 還原定位與拖曳樣式
+    
+      // 先移除暫存樣式
       card.classList.remove("dragging");
       card.style.position = "";
       card.style.left = "";
       card.style.top = "";
       card.style.zIndex = "";
-  
+    
       const t = e.changedTouches && e.changedTouches[0];
       if (!t) return;
-  
+    
+      // **關鍵修正：暫時隱藏卡片自己，避免被擋住**
+      card.style.pointerEvents = "none";
+    
+      // 取得實際落點下方的元素
       const el = document.elementFromPoint(t.clientX, t.clientY);
       const target = el && el.closest(".target");
-  
+    
+      // 顯示回卡片
+      card.style.pointerEvents = "";
+    
       if (target && target.dataset.accept === card.dataset.type){
-        // 進格子前，如果該格已有卡，先放回來源
         if (target.firstChild) moveCardBack(target.firstChild);
         if (card.parentElement && card.parentElement.classList.contains("target")) {
           card.parentElement.classList.remove("filled");
         }
         target.appendChild(card);
         target.classList.add("filled");
-        // 讓卡片在格子內依 CSS 自適應（寬 100%、4:3）
-        card.style.width = "";  // 交給 .target .card.img 的 CSS 規則
-        card.style.height = "";
       } else {
         if (card.parentElement && card.parentElement.classList.contains("target")) {
           card.parentElement.classList.remove("filled");
@@ -179,6 +182,7 @@
         moveCardBack(card);
       }
     };
+
   
     card.addEventListener("touchstart", onTouchStart, { passive: true });
     card.addEventListener("touchmove",  onTouchMove,  { passive: false });
