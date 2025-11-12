@@ -395,13 +395,13 @@ body { zoom: 1.2; }
   }
    /* 拖曳中縮小（滑鼠與觸控通用），只在拖曳狀態套用，不影響放入後尺寸 */
   .card.dragging {
-    transform: scale(0.82);          /* 視覺縮小，較容易放進格子 */
+    transform: scale(0.56);          /* 視覺縮小，較容易放進格子 */
     opacity: 0.95;
   }
   
   /* 針對圖片卡，在拖曳中再小一點，避免「塞不進去」 */
   .card.img.dragging {
-    width: 80% !important;           /* 只在拖曳浮動時生效 */
+    width: 50% !important;           /* 只在拖曳浮動時生效 */
     aspect-ratio: 4 / 3;
   }
 }
