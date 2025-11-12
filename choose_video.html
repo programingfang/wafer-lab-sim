@@ -6,13 +6,28 @@
   <title>矽晶圓密探 - 影片選擇</title>
   <link rel="stylesheet" href="css/main.css"/>
   <link rel="stylesheet" href="css/video.css"/>
+  <style>
+    /* 顯示用的錯誤/提示區塊 */
+    .notice {
+      padding: 12px 16px;
+      border: 1px solid #e5e7eb;
+      background: #fff7ed;
+      color: #7c2d12;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .notice.show { display:block; }
+  </style>
 </head>
 <body>
   <header class="site-header">
-    <h1>影片關卡選擇</h1>
+    <h1>矽晶圓密探</h1>
   </header>
 
   <main class="container">
+    <div id="notice" class="notice"></div>
+
     <!-- 播放器：預設只載入 metadata；poster 在點擊時設定 -->
     <section class="block" id="playerSection" style="display:none;">
       <video id="player" class="video-player"
@@ -30,13 +45,13 @@
     <!-- 影片清單 -->
     <section class="block">
       <div class="video-grid" id="videoGrid">
-        <!-- 由 choose_video.js 依 video_list.js 動態建立 -->
+        <!-- 由 choose_video.js 動態建立 -->
       </div>
     </section>
   </main>
 
-  <!-- 資料與行為 -->
-  <script src="js/video_list.js"></script>
-  <script src="js/choose_video.js"></script>
+  <!-- 先載資料、後載行為（使用 defer 確保 DOM 準備好） -->
+  <script src="js/video_list.js" defer></script>
+  <script src="js/choose_video.js" defer></script>
 </body>
 </html>
