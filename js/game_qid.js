@@ -196,11 +196,17 @@
     // 如果目標已有卡片
     if (existing) {
       if (from && from.classList && from.classList.contains("target")) {
-        // 來源是另一個 target → 交換
-        // 把 target 內的 existing 放回 from
+        // 來源是另一個 target → 交換位置
         target.removeChild(existing);
         from.appendChild(existing);
-        from.classList.add("filled"); // 來源仍有卡片
+        from.classList.add("filled");
+    
+        // ★ 修正關鍵：重設被交換卡片的樣式
+        existing.style.position = "";
+        existing.style.left = "";
+        existing.style.top = "";
+        existing.style.zIndex = "";
+        existing.classList.remove("dragging");
       } else {
         // 來源是來源池（imgPool / textPool）→ 原目標卡回來源池
         moveCardBack(existing);
