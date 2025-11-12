@@ -1,107 +1,123 @@
-// choose_video.js
-// - 使用 PNG 縮圖 (thumb)
-// - 點縮圖或標題皆可播放
-// - 播完自動前往 ic_game.html?qid=...
-// - 支援 auto-play：choose_video.html?play=<qid>&return=<encodedURL>
+(function(){
+  const grid = document.getElementById('videoGrid');
+  const playerSection = document.getElementById('playerSection');
+  const player = document.getElementById('player');
+  const backBtn = document.getElementById('backBtn');
 
-(function () {
-  const grid = document.getElementById("videoGrid");
-  if (!grid) return;
+  // 安全取得 videoList
+  const list = Array.isArray(window.videoList) ? window.videoList : [];
 
-  // 如需支援 GitHub Pages 子路徑，改為 true
-  const USE_BASE = false;
-  const BASE = (() => {
-    if (!USE_BASE) return "";
-    const parts = location.pathname.split("/").filter(Boolean);
-    return parts.length ? `/${parts[0]}/` : "/";
-  })();
+  // 建立卡片：縮圖先顯示，點擊後才設定 player.src
+  function renderGrid(){
+    grid.innerHTML = '';
+    list.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'video-card';
+      card.dataset.qid = item.qid;
 
-  function thumbURL(item) {
-    const fn = item.thumb || `ic_make_${item.n}.png`;
-    return `${BASE}src/img/${fn}`;
-  }
-  function videoURL(item) {
-    const fn = item.file || `ic_make_${item.n}.mp4`;
-    return `${BASE}src/video/${fn}`;
-  }
-  function gameURL(qid) {
-    return `${BASE}ic_game.html?qid=${qid}`;
-  }
+      const thumbBox = document.createElement('div');
+      thumbBox.className = 'thumb';
 
-  function playInline(item, onEndedGoTo) {
-    const v = document.createElement("video");
-    v.src = videoURL(item);
-    v.controls = true;
-    v.autoplay = true;
-    v.style.width = "100%";
-    v.style.maxHeight = "90vh";
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = item.title || `影片 ${item.qid}`;
+      img.src = item.thumb;            // 小圖（PNG/JPG）放這裡
+      thumbBox.appendChild(img);
 
-    document.body.innerHTML = "";
-    const wrap = document.createElement("div");
-    wrap.style.maxWidth = "1100px";
-    wrap.style.margin = "24px auto";
-    wrap.appendChild(v);
-    document.body.appendChild(wrap);
+      const title = document.createElement('p');
+      title.textContent = item.title || `第 ${item.qid} 題`;
 
-    v.addEventListener("ended", () => {
-      if (typeof onEndedGoTo === "string" && onEndedGoTo.length) {
-        location.href = onEndedGoTo;
-      } else {
-        const qid = item.qid || item.n || 1;
-        location.href = gameURL(qid);
-      }
+      // 點縮圖或標題都播放
+      thumbBox.addEventListener('click', () => playItem(item));
+      title.addEventListener('click', () => playItem(item));
+      card.addEventListener('click', (e) => {
+        // 若是點擊卡片空白處也能播放
+        if (e.target === card) playItem(item);
+      });
+
+      card.appendChild(thumbBox);
+      card.appendChild(title);
+      grid.appendChild(card);
     });
+
+    // Optional: 進一步 lazy-load 縮圖（視覺上通常 loading="lazy" 已足夠）
+    if ('IntersectionObserver' in window){
+      const io = new IntersectionObserver(entries=>{
+        entries.forEach(en=>{
+          if (en.isIntersecting){
+            const pic = en.target.querySelector('img');
+            if (pic && pic.dataset.src){
+              pic.src = pic.dataset.src;
+              delete pic.dataset.src;
+            }
+            io.unobserve(en.target);
+          }
+        });
+      }, { rootMargin: '200px' });
+
+      Array.from(document.querySelectorAll('.video-card')).forEach(c => io.observe(c));
+    }
   }
 
-  function createCard(item) {
-    const card = document.createElement("div");
-    card.className = "video-card";
+  // 真正開始播放：點擊時才設定 src，並顯示播放器
+  async function playItem(item){
+    try{
+      // 顯示播放器、設定 poster
+      playerSection.style.display = 'block';
+      backBtn.style.display = history.length > 1 ? 'inline-block' : 'none';
 
-    // 縮圖容器（16:9）
-    const thumb = document.createElement("div");
-    thumb.className = "thumb";
+      // 設 poster（避免一片黑）
+      if (item.thumb) player.setAttribute('poster', item.thumb);
+      else player.removeAttribute('poster');
 
-    const img = document.createElement("img");
-    img.src = thumbURL(item);
-    img.alt = item.title || `影片 ${item.n}`;
-    img.loading = "lazy";
-    thumb.appendChild(img);
+      // 僅在點擊時設定 src，避免一載入頁面就拉整支影片
+      if (player.src !== absolutize(item.src)){
+        player.src = item.src;  // 讓瀏覽器自己解析相對路徑即可
+        player.load();          // 只抓 metadata
+      }
 
-    const p = document.createElement("p");
-    p.textContent = item.title || `影片 ${item.n}`;
-    p.style.cursor = "pointer";
+      // 嘗試播放（使用者互動後通常允許自動播放含聲）
+      await player.play().catch(()=>{ /* 某些瀏覽器會要求再點擊一次播放 */ });
 
-    const onClick = () => playInline(item);
-    card.onclick = onClick;
-    thumb.onclick = onClick;
-    p.onclick = onClick;
-
-    card.appendChild(thumb);
-    card.appendChild(p);
-    return card;
+      // 播放完畢 → 轉到對應關卡
+      player.onended = () => {
+        // 若 URL 有 return 參數：看完回來要去哪
+        const params = new URLSearchParams(location.search);
+        const ret = params.get('return');
+        if (ret) {
+          location.href = ret;
+        } else {
+          // 預設：跳到對應的關卡頁
+          location.href = `ic_game.html?qid=${encodeURIComponent(item.qid)}`;
+        }
+      };
+    }catch(err){
+      console.error(err);
+      alert('影片播放失敗，請確認檔案路徑或瀏覽器支援度。');
+    }
   }
 
-  // 渲染清單
-  const list = Array.isArray(window.WAFER_VIDEOS) ? window.WAFER_VIDEOS : [];
-  grid.innerHTML = "";
-  if (list.length === 0) {
-    grid.innerHTML = `<p style="color:#6b7280">尚未設定任何影片</p>`;
-  } else {
-    list.forEach((it) => grid.appendChild(createCard(it)));
+  // 支援從外部指定 ?play=<qid>&return=<url> 直接播放並返回
+  function autoplayIfRequested(){
+    const params = new URLSearchParams(location.search);
+    const qidStr = params.get('play');
+    if (!qidStr) return;
+    const qid = parseInt(qidStr, 10);
+    const item = list.find(x => Number(x.qid) === qid);
+    if (item) playItem(item);
   }
 
-  // === 自動播放：?play=<qid>&return=<encodedURL> ===
-  (function autoPlayIfNeeded() {
-    const usp = new URLSearchParams(location.search);
-    const playQ = parseInt(usp.get("play") || "", 10);
-    const ret = usp.get("return"); // 可能是 encoded URL
-    if (!playQ) return;
+  // 讓相對路徑比較/判斷時能拿到絕對字串（必要時）
+  function absolutize(url){
+    const a = document.createElement('a');
+    a.href = url;
+    return a.href;
+  }
 
-    const item = list.find((v) => (v.qid || v.n) === playQ);
-    if (!item) return;
+  // 返回按鈕（若出現）
+  backBtn?.addEventListener('click', ()=> history.back());
 
-    // 若有 return 參數，優先導回該 URL；否則回本題 ic_game
-    const backTo = ret ? decodeURIComponent(ret) : gameURL(playQ);
-    playInline(item, backTo);
-  })();
+  // 初始化：渲染卡片 → 檢查是否要自動播放
+  renderGrid();
+  autoplayIfRequested();
 })();

@@ -2,18 +2,40 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>選擇關卡 - 矽晶圓密探</title>
-  <link rel="stylesheet" href="css/main.css" />
-  <link rel="stylesheet" href="css/video.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>矽晶圓密探 - 影片選擇</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/video.css"/>
 </head>
 <body>
-  <header class="site-header"><h1>選擇關卡</h1></header>
+  <header class="site-header">
+    <h1>影片關卡選擇</h1>
+  </header>
+
   <main class="container">
-    <div class="video-grid" id="videoGrid"></div>
+    <!-- 播放器：預設只載入 metadata；poster 在點擊時設定 -->
+    <section class="block" id="playerSection" style="display:none;">
+      <video id="player" class="video-player"
+             controls
+             preload="metadata"
+             playsinline
+             style="width:100%;max-width:960px;display:block;margin:0 auto;border-radius:12px;">
+        您的瀏覽器不支援 HTML5 影片。
+      </video>
+      <div style="text-align:center;margin-top:10px;">
+        <button id="backBtn" class="btn" style="display:none;">返回上一頁</button>
+      </div>
+    </section>
+
+    <!-- 影片清單 -->
+    <section class="block">
+      <div class="video-grid" id="videoGrid">
+        <!-- 由 choose_video.js 依 video_list.js 動態建立 -->
+      </div>
+    </section>
   </main>
 
-  <!-- 一定要先載入影片清單，再載入行為 -->
+  <!-- 資料與行為 -->
   <script src="js/video_list.js"></script>
   <script src="js/choose_video.js"></script>
 </body>
