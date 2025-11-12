@@ -10,7 +10,6 @@
     const grid = document.getElementById('videoGrid');
     const playerSection = document.getElementById('playerSection');
     const player = document.getElementById('player');
-    const backBtn = document.getElementById('backBtn');
     const notice = document.getElementById('notice');
 
     // 取資料並偵錯
@@ -84,7 +83,7 @@
       try{
         // 顯示播放器、設定 poster
         playerSection.style.display = 'block';
-        backBtn.style.display = history.length > 1 ? 'inline-block' : 'none';
+        
 
         if (item.thumb) player.setAttribute('poster', item.thumb);
         else player.removeAttribute('poster');
@@ -130,6 +129,6 @@
       return a.href;
     }
 
-    backBtn?.addEventListener('click', ()=> history.back());
+    
   }
 })();
