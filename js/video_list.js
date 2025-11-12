@@ -1,5 +1,5 @@
 // 影片清單（以 SVG + PDF 組合為縮圖）
-window.WAFER_VIDEOS = [
+window.videoList = [
   {
     qid: 1,
     title: "第一關 IC 是如何製造的-設計",
